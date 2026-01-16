@@ -1,0 +1,60 @@
+import streamlit as st
+import google.generativeai as genai
+from PIL import Image
+from streamlit_extras.let_it_rain import rain
+
+# 1. C?u hình b?o m?t
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+
+st.set_page_config(page_title="Vietnam Travel AI Designer", page_icon="??", layout="wide")
+
+# 2. Thu vi?n Nh?c & Hi?u ?ng
+TRAVEL_DATA = {
+    "Ðà L?t": {"music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "emoji": "??"},
+    "Phú Qu?c": {"music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", "emoji": "??"},
+    "C? dô Hu?": {"music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", "emoji": "??"},
+    "Hà Giang": {"music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", "emoji": "??"}
+}
+
+st.title("?? Vietnam Travel AI: Hành Trình ?o")
+st.markdown("---")
+
+# 3. Giao di?n Sidebar
+with st.sidebar:
+    st.header("Cài d?t chuy?n di")
+    destination = st.selectbox("Ði?m d?n mo u?c:", list(TRAVEL_DATA.keys()))
+    ratio = st.radio("T? l? khung hình (Dành cho):", ["9:16 (TikTok/Shorts)", "16:9 (YouTube)", "1:1 (Instagram)"])
+    st.info("App s? t? d?ng ch?n nh?c và hi?u ?ng phù h?p!")
+
+# 4. Giao di?n chính
+uploaded_file = st.file_uploader("T?i ?nh chân dung ho?c phong c?nh c?a b?n...", type=["jpg", "png", "jpeg"])
+
+if uploaded_file:
+    col1, col2 = st.columns(2)
+    img = Image.open(uploaded_file)
+    with col1:
+        st.image(img, caption="?nh b?n dã t?i lên", use_container_width=True)
+
+    if st.button("? B?t d?u thi?t k? hành trình"):
+        with st.spinner(f"Ðang dua b?n t?i {destination}..."):
+            # A. Phân tích ?nh v?i Gemini
+            model_vision = genai.GenerativeModel('gemini-1.5-flash')
+            prompt_analysis = "Describe the person's appearance, hair, and clothing in this photo briefly."
+            response = model_vision.generate_content([prompt_analysis, img])
+            
+            # B. T?o Prompt ngh? thu?t
+            final_prompt = f"A professional travel photograph of a person with {response.text}, standing in the iconic scenery of {destination}, Vietnam. High quality, cinematic lighting, aspect ratio {ratio}."
+            
+            # C. Hi?n th? k?t qu? (Gi? l?p t?o ?nh ho?c g?i API Imagen n?u có quy?n)
+            st.balloons()
+            with col2:
+                st.success(f"Chào m?ng b?n d?n v?i {destination}!")
+                st.code(final_prompt, language="markdown")
+                st.info("Dán Prompt trên vào Midjourney/Leonardo d? nh?n ?nh ch?t lu?ng cao nh?t!")
+            
+            # D. Hi?u ?ng và Nh?c
+            rain(emoji=TRAVEL_DATA[destination]["emoji"], font_size=25, falling_speed=3, animation_length=5)
+            st.audio(TRAVEL_DATA[destination]["music"], format="audio/mp3", autoplay=True)
+
+st.markdown("---")
+st.caption("Phát tri?n b?i Google AI Studio x Streamlit")
