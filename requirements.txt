@@ -1,4 +1,1 @@
-streamlit
-google-generativeai
-Pillow
-streamlit-extras
+GOOGLE_API_KEY = "AIzaSyDYIIEA7BdzoPXOO9jqh5KI_lhnn6CpsCQg"
